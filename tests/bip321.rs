@@ -56,41 +56,35 @@ fn spec_address_with_lightning() {
     let s = format!("bitcoin:{ADDR}?lightning=lnbc420bogusinvoice");
     let uri = Uri::parse(&s).unwrap();
     assert!(uri.address.is_some());
-    assert_eq!(
-        uri.lightning.as_ref().unwrap().as_str(),
-        "lnbc420bogusinvoice"
-    );
+    assert_eq!(uri.lightning[0].as_str(), "lnbc420bogusinvoice");
 }
 
 #[test]
 fn spec_lightning_only() {
     let uri = Uri::parse("bitcoin:?lightning=lnbc420bogusinvoice").unwrap();
     assert!(uri.address.is_none());
-    assert_eq!(
-        uri.lightning.as_ref().unwrap().as_str(),
-        "lnbc420bogusinvoice"
-    );
+    assert_eq!(uri.lightning[0].as_str(), "lnbc420bogusinvoice");
 }
 
 #[test]
 fn spec_lno_only() {
     let uri = Uri::parse("bitcoin:?lno=lno1bogusoffer").unwrap();
     assert!(uri.address.is_none());
-    assert_eq!(uri.lno.as_ref().unwrap().as_str(), "lno1bogusoffer");
+    assert_eq!(uri.lno[0].as_str(), "lno1bogusoffer");
 }
 
 #[test]
 fn spec_lno_with_sp() {
     let uri = Uri::parse("bitcoin:?lno=lno1bogusoffer&sp=sp1qsilentpayment").unwrap();
-    assert_eq!(uri.lno.as_ref().unwrap().as_str(), "lno1bogusoffer");
-    assert_eq!(uri.sp.as_ref().unwrap().as_str(), "sp1qsilentpayment");
+    assert_eq!(uri.lno[0].as_str(), "lno1bogusoffer");
+    assert_eq!(uri.sp[0].as_str(), "sp1qsilentpayment");
 }
 
 #[test]
 fn spec_sp_only() {
     let uri = Uri::parse("bitcoin:?sp=sp1qsilentpayment").unwrap();
     assert!(uri.address.is_none());
-    assert_eq!(uri.sp.as_ref().unwrap().as_str(), "sp1qsilentpayment");
+    assert_eq!(uri.sp[0].as_str(), "sp1qsilentpayment");
 }
 
 #[test]
@@ -98,7 +92,7 @@ fn spec_address_with_sp() {
     let s = format!("bitcoin:{ADDR}?sp=sp1qsilentpayment");
     let uri = Uri::parse(&s).unwrap();
     assert!(uri.address.is_some());
-    assert_eq!(uri.sp.as_ref().unwrap().as_str(), "sp1qsilentpayment");
+    assert_eq!(uri.sp[0].as_str(), "sp1qsilentpayment");
 }
 
 #[test]
@@ -210,7 +204,7 @@ fn case_insensitive_param_keys() {
     assert!(uri.amount.is_some());
     assert_eq!(uri.label.as_ref().unwrap().as_str(), "Test");
     assert_eq!(uri.message.as_ref().unwrap().as_str(), "Hello");
-    assert_eq!(uri.lightning.as_ref().unwrap().as_str(), "lnbc1");
+    assert_eq!(uri.lightning[0].as_str(), "lnbc1");
 }
 
 #[test]
@@ -371,12 +365,12 @@ fn error_duplicate_message() {
 }
 
 #[test]
-fn error_duplicate_lightning() {
-    let s = format!("bitcoin:{ADDR}?lightning=a&lightning=b");
-    assert!(matches!(
-        Uri::parse(&s),
-        Err(Error::DuplicateParameter(k)) if k == "lightning"
-    ));
+fn multiple_lightning_allowed() {
+    let s = format!("bitcoin:{ADDR}?lightning=lnbc1&lightning=lnbc2");
+    let uri = Uri::parse(&s).unwrap();
+    assert_eq!(uri.lightning.len(), 2);
+    assert_eq!(uri.lightning[0].as_str(), "lnbc1");
+    assert_eq!(uri.lightning[1].as_str(), "lnbc2");
 }
 
 #[test]
@@ -459,10 +453,7 @@ fn roundtrip_complex() {
         uri.message.as_ref().unwrap().as_str(),
         uri2.message.as_ref().unwrap().as_str()
     );
-    assert_eq!(
-        uri.lightning.as_ref().unwrap().as_str(),
-        uri2.lightning.as_ref().unwrap().as_str()
-    );
+    assert_eq!(uri.lightning[0].as_str(), uri2.lightning[0].as_str());
 }
 
 #[test]
@@ -563,6 +554,18 @@ fn bc_duplicate_allowed() {
     let s = format!("bitcoin:?bc=addr1&bc=addr2&bc=addr3");
     let uri = Uri::parse(&s).unwrap();
     assert_eq!(uri.bc.len(), 3);
+}
+
+#[test]
+fn multiple_lno_allowed() {
+    let uri = Uri::parse("bitcoin:?lno=offer1&lno=offer2").unwrap();
+    assert_eq!(uri.lno.len(), 2);
+}
+
+#[test]
+fn multiple_sp_allowed() {
+    let uri = Uri::parse("bitcoin:?sp=sp1a&sp=sp1b").unwrap();
+    assert_eq!(uri.sp.len(), 2);
 }
 
 #[test]

@@ -16,8 +16,8 @@ const KNOWN_KEYS: &[&str] = &[
     "amount", "label", "message", "lightning", "lno", "sp", "bc", "tb", "pop", "req-pop",
 ];
 
-/// Keys that are allowed to appear multiple times.
-const MULTI_VALUE_KEYS: &[&str] = &["bc", "tb"];
+/// Payment instruction keys — allowed to appear multiple times per BIP-321.
+const MULTI_VALUE_KEYS: &[&str] = &["lightning", "lno", "sp", "bc", "tb"];
 
 /// Parse a BIP-321 URI with no extension parameters.
 pub(crate) fn parse<'a>(s: &'a str) -> Result<Uri<'a, NoExtras>, Error> {
@@ -58,9 +58,9 @@ pub(crate) fn parse_with_extras<'a, Extras: DeserializeParams<'a>>(
     let mut amount: Option<Amount> = None;
     let mut label: Option<Param<'a>> = None;
     let mut message: Option<Param<'a>> = None;
-    let mut lightning: Option<Param<'a>> = None;
-    let mut lno: Option<Param<'a>> = None;
-    let mut sp: Option<Param<'a>> = None;
+    let mut lightning: Vec<Param<'a>> = Vec::new();
+    let mut lno: Vec<Param<'a>> = Vec::new();
+    let mut sp: Vec<Param<'a>> = Vec::new();
     let mut bc: Vec<Param<'a>> = Vec::new();
     let mut tb: Vec<Param<'a>> = Vec::new();
     let mut pop: Option<Param<'a>> = None;
@@ -97,13 +97,13 @@ pub(crate) fn parse_with_extras<'a, Extras: DeserializeParams<'a>>(
                     message = Some(Param::from_encoded(raw_value)?);
                 }
                 "lightning" => {
-                    lightning = Some(Param::from_encoded(raw_value)?);
+                    lightning.push(Param::from_encoded(raw_value)?);
                 }
                 "lno" => {
-                    lno = Some(Param::from_encoded(raw_value)?);
+                    lno.push(Param::from_encoded(raw_value)?);
                 }
                 "sp" => {
-                    sp = Some(Param::from_encoded(raw_value)?);
+                    sp.push(Param::from_encoded(raw_value)?);
                 }
                 "bc" => {
                     bc.push(Param::from_encoded(raw_value)?);
@@ -135,9 +135,9 @@ pub(crate) fn parse_with_extras<'a, Extras: DeserializeParams<'a>>(
 
     // BIP-321: must have at least one payment instruction
     let has_payment = address.is_some()
-        || lightning.is_some()
-        || lno.is_some()
-        || sp.is_some()
+        || !lightning.is_empty()
+        || !lno.is_empty()
+        || !sp.is_empty()
         || !bc.is_empty()
         || !tb.is_empty();
     if !has_payment {
@@ -244,7 +244,7 @@ mod tests {
     fn address_less_lightning() {
         let uri = parse("bitcoin:?lightning=lnbc1234").unwrap();
         assert!(uri.address.is_none());
-        assert_eq!(uri.lightning.unwrap().as_str(), "lnbc1234");
+        assert_eq!(uri.lightning[0].as_str(), "lnbc1234");
     }
 
     #[test]
@@ -295,7 +295,7 @@ mod tests {
         )
         .unwrap();
         assert!(uri.address.is_some());
-        assert!(uri.lightning.is_some());
+        assert!(!uri.lightning.is_empty());
         assert!(uri.amount.is_some());
     }
 }

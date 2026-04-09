@@ -20,7 +20,7 @@
 //! // Address-less URI with lightning invoice
 //! let uri = Uri::parse("bitcoin:?lightning=lnbc1234").unwrap();
 //! assert!(uri.address.is_none());
-//! assert_eq!(uri.lightning.as_ref().unwrap().as_str(), "lnbc1234");
+//! assert_eq!(uri.lightning[0].as_str(), "lnbc1234");
 //! ```
 
 mod de;
@@ -54,12 +54,12 @@ pub struct Uri<'a, Extras = NoExtras> {
     pub label: Option<Param<'a>>,
     /// A message describing the purpose of the transaction.
     pub message: Option<Param<'a>>,
-    /// A BOLT11 lightning invoice.
-    pub lightning: Option<Param<'a>>,
-    /// A BOLT12 offer.
-    pub lno: Option<Param<'a>>,
-    /// A silent payment address.
-    pub sp: Option<Param<'a>>,
+    /// BOLT11 lightning invoices (payment instruction — may have multiple).
+    pub lightning: Vec<Param<'a>>,
+    /// BOLT12 offers (payment instruction — may have multiple).
+    pub lno: Vec<Param<'a>>,
+    /// Silent payment addresses (payment instruction — may have multiple).
+    pub sp: Vec<Param<'a>>,
     /// On-chain bech32 addresses (can have multiple values).
     pub bc: Vec<Param<'a>>,
     /// Testnet bech32 addresses (can have multiple values).

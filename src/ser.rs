@@ -32,16 +32,16 @@ pub(crate) fn serialize<Extras: SerializeParams>(
         write!(f, "{}message={}", sep.next(), encode_param(message))?;
     }
 
-    if let Some(ref lightning) = uri.lightning {
-        write!(f, "{}lightning={}", sep.next(), encode_param(lightning))?;
+    for inv in &uri.lightning {
+        write!(f, "{}lightning={}", sep.next(), encode_param(inv))?;
     }
 
-    if let Some(ref lno) = uri.lno {
-        write!(f, "{}lno={}", sep.next(), encode_param(lno))?;
+    for offer in &uri.lno {
+        write!(f, "{}lno={}", sep.next(), encode_param(offer))?;
     }
 
-    if let Some(ref sp) = uri.sp {
-        write!(f, "{}sp={}", sep.next(), encode_param(sp))?;
+    for addr in &uri.sp {
+        write!(f, "{}sp={}", sep.next(), encode_param(addr))?;
     }
 
     for addr in &uri.bc {
