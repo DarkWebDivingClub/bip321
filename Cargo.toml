@@ -1,0 +1,16 @@
+[package]
+name = "bip321"
+version = "0.1.0"
+edition = "2021"
+description = "BIP-321 compliant bitcoin: URI parser and serializer"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/DarkWebDivingClub/bip321"
+keywords = ["bitcoin", "bip321", "uri", "payment"]
+categories = ["parser-implementations", "cryptography::cryptocurrencies"]
+
+[dependencies]
+bitcoin = { version = "0.32", default-features = false, features = ["std"] }
+percent-encoding = "2.3"
+
+[dev-dependencies]
+serde_json = "1"
