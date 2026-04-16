@@ -72,6 +72,40 @@ pub struct Uri<'a, Extras = NoExtras> {
     pub extras: Extras,
 }
 
+impl<'a, Extras: Default> Uri<'a, Extras> {
+    /// Create an empty URI for programmatic construction.
+    pub fn new() -> Self {
+        Self {
+            address: None,
+            address_str: None,
+            amount: None,
+            label: None,
+            message: None,
+            lightning: Vec::new(),
+            lno: Vec::new(),
+            sp: Vec::new(),
+            bc: Vec::new(),
+            tb: Vec::new(),
+            pop: None,
+            req_pop: false,
+            extras: Extras::default(),
+        }
+    }
+
+    /// Set the on-chain address (both parsed and raw string for serialization).
+    pub fn set_address(&mut self, raw: String, parsed: Address<NetworkUnchecked>) {
+        self.address_str = Some(raw);
+        self.address = Some(parsed);
+    }
+}
+
+impl<'a, Extras> Uri<'a, Extras> {
+    /// Returns the raw address string, if an address was present in the URI.
+    pub fn address_str(&self) -> Option<&str> {
+        self.address_str.as_deref()
+    }
+}
+
 impl<'a> Uri<'a, NoExtras> {
     /// Parse a BIP-321 URI string.
     pub fn parse(s: &'a str) -> Result<Self, Error> {

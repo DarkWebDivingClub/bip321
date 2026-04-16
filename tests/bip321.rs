@@ -1,5 +1,6 @@
-use bip321::{Error, Uri};
-use bitcoin::Amount;
+use bip321::{Error, Param, Uri};
+use bitcoin::address::NetworkUnchecked;
+use bitcoin::{Address, Amount};
 
 // Valid mainnet P2PKH address (genesis block coinbase)
 const ADDR: &str = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa";
@@ -619,4 +620,49 @@ fn custom_extras_serialized() {
     let uri: Uri<'_, CustomExtras> = Uri::parse_with_extras(&s).unwrap();
     let out = format!("{uri}");
     assert!(out.contains("custom=myvalue"));
+}
+
+// =========================================================================
+// Builder (Uri::new) tests
+// =========================================================================
+
+#[test]
+fn builder_address_only() {
+    let mut uri: Uri<'_> = Uri::new();
+    let parsed: Address<NetworkUnchecked> = ADDR.parse().unwrap();
+    uri.set_address(ADDR.to_string(), parsed);
+    let out = format!("{uri}");
+    assert_eq!(out, format!("bitcoin:{ADDR}"));
+}
+
+#[test]
+fn builder_lightning_only() {
+    let mut uri: Uri<'_> = Uri::new();
+    uri.lightning
+        .push(Param::from_decoded("lnbc1234".to_string()));
+    let out = format!("{uri}");
+    assert_eq!(out, "bitcoin:?lightning=lnbc1234");
+}
+
+#[test]
+fn builder_full_roundtrip() {
+    let mut uri: Uri<'_> = Uri::new();
+    let parsed: Address<NetworkUnchecked> = ADDR.parse().unwrap();
+    uri.set_address(ADDR.to_string(), parsed);
+    uri.amount = Some(Amount::from_btc(0.001).unwrap());
+    uri.label = Some(Param::from_decoded("Alice".to_string()));
+    uri.message = Some(Param::from_decoded("coffee".to_string()));
+    uri.lightning
+        .push(Param::from_decoded("lnbc1234".to_string()));
+    uri.lno
+        .push(Param::from_decoded("lno1offer".to_string()));
+
+    let out = format!("{uri}");
+    let reparsed = Uri::parse(&out).unwrap();
+    assert_eq!(reparsed.amount.unwrap(), Amount::from_btc(0.001).unwrap());
+    assert_eq!(reparsed.label.as_ref().unwrap().as_str(), "Alice");
+    assert_eq!(reparsed.message.as_ref().unwrap().as_str(), "coffee");
+    assert_eq!(reparsed.lightning[0].as_str(), "lnbc1234");
+    assert_eq!(reparsed.lno[0].as_str(), "lno1offer");
+    assert!(reparsed.address.is_some());
 }
